@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Question {
+  id         String     @id @default(cuid())
+  title      String
+  sourceUrl  String?
+  notes      String?
+  solution   String?
+  difficulty Difficulty @default(MEDIUM)
+  status     Status     @default(TODO)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  tags      TagsOnQuestions[]
+  companies CompaniesOnQuestions[]
+  reviews   ReviewSchedule[]
+}
+
+model Tag {
+  id        String            @id @default(cuid())
+  name      String            @unique
+  questions TagsOnQuestions[]
+}
+
+model Company {
+  id        String                 @id @default(cuid())
+  name      String                 @unique
+  questions CompaniesOnQuestions[]
+}
+
+model TagsOnQuestions {
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId      String
+
+  @@id([questionId, tagId])
+}
+
+model CompaniesOnQuestions {
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId  String
+
+  @@id([questionId, companyId])
+}
+
+model ReviewSchedule {
+  id           String   @id @default(cuid())
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId   String
+  nextReviewAt DateTime
+  interval     Int      @default(1)
+  easeFactor   Float    @default(2.5)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Status {
+  TODO
+  IN_PROGRESS
+  DONE
+}
